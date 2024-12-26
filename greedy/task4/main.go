@@ -63,9 +63,13 @@ func main() {
 
 	huffmantree := huffmantree(s)
 	codemap := codemap(huffmantree)
+	codelen := codelen(huffmantree)
 
-	fmt.Fprintf(out, "%d %d\n", len(codemap), huffmantree.freq)
+	fmt.Fprintf(out, "%d %d\n", len(codemap), codelen)
 
+	for k, v := range codemap {
+		fmt.Fprintf(out, "%c: %s\n", k, v)
+	}
 	for _, ch := range s {
 		fmt.Fprint(out, codemap[ch])
 	}
@@ -103,7 +107,11 @@ func codelen(root *Node) int {
 			return node.freq + dfs(node.left) + dfs(node.right)
 		}
 	}
-	return dfs(root) - root.freq
+	if leaf(*root) {
+		return root.freq
+	} else {
+		return dfs(root) - root.freq
+	}
 }
 
 func huffmantree(s string) *Node {
