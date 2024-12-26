@@ -18,7 +18,6 @@ func (h NodeHeap) Len() int {
 }
 
 func (h NodeHeap) Less(i, j int) bool {
-	fmt.Printf("!!! less %d\n", len(h))
 	return h[i].freq < h[j].freq
 }
 
@@ -34,7 +33,6 @@ func (h NodeHeap) Swap(i, j int) {
 // not just its contents.
 
 func (h *NodeHeap) Push(x any) {
-	fmt.Println("!!! push")
 	*h = append(*h, x.(*Node))
 }
 
@@ -60,14 +58,55 @@ func main() {
 	out := bufio.NewWriter(os.Stdout)
 	defer out.Flush()
 
-	var n int
-	fmt.Fscan(in, &n)
+	var s string
+	fmt.Fscan(in, &s)
 
-	//result := greedy(n)
+	huffmantree := huffmantree(s)
+	codemap := codemap(huffmantree)
 
+	fmt.Fprintf(out, "%d %d\n", len(codemap), huffmantree.freq)
+
+	for _, ch := range s {
+		fmt.Fprint(out, codemap[ch])
+	}
 }
 
-func encode(s string) map[rune]string {
+func codemap(root *Node) map[rune]string {
+	result := make(map[rune]string)
+	var dfs func(node *Node, value int, level int)
+
+	dfs = func(node *Node, value int, level int) {
+		if leaf(*node) {
+			code := strconv.FormatInt(int64(value), 2)
+			prefixLen := level - len(code)
+			var sb strings.Builder
+			for i := 0; i < prefixLen; i++ {
+				sb.WriteRune('0')
+			}
+			sb.WriteString(code)
+			result[node.char] = sb.String()
+		} else {
+			dfs(node.left, value*2, level+1)
+			dfs(node.right, value*2+1, level+1)
+		}
+	}
+	dfs(root, 0, 0)
+	return result
+}
+
+func codelen(root *Node) int {
+	var dfs func(node *Node) int
+	dfs = func(node *Node) int {
+		if leaf(*node) {
+			return node.freq
+		} else {
+			return node.freq + dfs(node.left) + dfs(node.right)
+		}
+	}
+	return dfs(root) - root.freq
+}
+
+func huffmantree(s string) *Node {
 	nodes := [26]Node{}
 
 	for _, v := range s {
@@ -76,8 +115,6 @@ func encode(s string) map[rune]string {
 		}
 		nodes[v-'a'].freq++
 	}
-
-	fmt.Printf("!!! %v\n", nodes)
 
 	var h NodeHeap
 	for _, node := range nodes {
@@ -96,34 +133,9 @@ func encode(s string) map[rune]string {
 		heap.Push(&h, &parent)
 	}
 
-	return buildTable(heap.Pop(&h).(*Node))
-}
-
-func buildTable(root *Node) map[rune]string {
-	fmt.Printf("%v\n", root)
-	result := make(map[rune]string)
-	var dfs func(node *Node, value int, level int)
-
-	dfs = func(node *Node, value int, level int) {
-		if leaf(*node) {
-			code := strconv.FormatInt(int64(value), 2)
-			prefixLen := level - len(code)
-			var sb strings.Builder
-			for i := 0; i < prefixLen; i++ {
-				sb.WriteRune('0')
-			}
-			sb.WriteString(code)
-			fmt.Println("!!! new")
-			result[node.char] = sb.String()
-		} else {
-			dfs(node.left, value*2, level+1)
-			dfs(node.right, value*2+1, level+1)
-		}
-	}
-	dfs(root, 0, 0)
-	return result
+	return heap.Pop(&h).(*Node)
 }
 
 func leaf(node Node) bool {
-	return node.left != nil
+	return node.left == nil
 }
