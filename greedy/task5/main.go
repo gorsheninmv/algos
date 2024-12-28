@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -14,13 +15,30 @@ func main() {
 	var letters, length int
 	fmt.Fscanf(in, "%d %d\n", &letters, &length)
 
-	codemap := make(map[rune]string)
-	for i := 0; i < 4; i++ {
+	codemap := make(map[string]rune)
+	for i := 0; i < letters; i++ {
 		var ch rune
 		var code string
 		fmt.Fscanf(in, "%c: %s\n", &ch, &code)
-		codemap[ch] = code
+		codemap[code] = ch
 	}
 
-	fmt.Printf("%v\n", codemap)
+	var code string
+	fmt.Fscanf(in, "%s\n", &code)
+	decode(in, out, codemap)
+}
+
+func decode(reader io.RuneReader, writer io.ByteWriter, codemap map[string]rune) {
+	buf := ""
+	for {
+		if v, _, err := reader.ReadRune(); err == nil {
+			buf = buf + string(v)
+			if letter, ok := codemap[buf]; ok {
+				writer.WriteByte(byte(letter))
+				buf = ""
+			}
+		} else {
+			break
+		}
+	}
 }

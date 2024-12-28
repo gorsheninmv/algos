@@ -1,12 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"reflect"
+	"strings"
 	"testing"
 )
 
-func TestCodemap(t *testing.T) {
-	actual := codemap(huffmantree("abacabad"))
+func TestDecode(t *testing.T) {
+	x := strings.NewReader("abcdef")
+	var y bytes.Buffer
+	decode(x, &y, make(map[string]rune)) 
 	expected := map[rune]string{
 		'a': "0",
 		'b': "10",
