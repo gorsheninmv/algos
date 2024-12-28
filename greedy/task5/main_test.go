@@ -8,37 +8,29 @@ import (
 )
 
 func TestDecode(t *testing.T) {
-	x := strings.NewReader("abcdef")
-	var y bytes.Buffer
-	decode(x, &y, make(map[string]rune)) 
-	expected := map[rune]string{
-		'a': "0",
-		'b': "10",
-		'c': "110",
-		'd': "111",
+	encoded := strings.NewReader("01001100100111")
+	var buf bytes.Buffer
+	codemap := map[string]rune{
+		"0": 'a',
+		"10": 'b',
+		"110": 'c',
+		"111": 'd',
 	}
+	decode(encoded, &buf, codemap) 
+	actual := buf.String()
+	expected := "abacabad"
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("actual = %v, expected = %v", actual, expected)
 	}
 
-	actual = codemap(huffmantree("a"))
-	expected = map[rune]string{
-		'a': "0",
+	encoded = strings.NewReader("0")
+	codemap = map[string]rune{
+		"0": 'a',
 	}
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("actual = %v, expected = %v", actual, expected)
-	}
-}
-
-func TestCodelen(t *testing.T) {
-	actual := codelen(huffmantree("abacabad"))
-	expected := 14
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("actual = %v, expected = %v", actual, expected)
-	}
-
-	actual = codelen(huffmantree("a"))
-	expected = 1
+	buf.Reset()
+	decode(encoded, &buf, codemap) 
+	actual = buf.String()
+	expected = "a"
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("actual = %v, expected = %v", actual, expected)
 	}

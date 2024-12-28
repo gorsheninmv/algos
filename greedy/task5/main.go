@@ -23,8 +23,6 @@ func main() {
 		codemap[code] = ch
 	}
 
-	var code string
-	fmt.Fscanf(in, "%s\n", &code)
 	decode(in, out, codemap)
 }
 
