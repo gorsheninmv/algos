@@ -6,6 +6,11 @@ import (
 	"os"
 )
 
+type node struct {
+	val  int
+	next *node
+}
+
 func main() {
 	in := bufio.NewReader(os.Stdin)
 	out := bufio.NewWriter(os.Stdout)
@@ -16,18 +21,23 @@ func main() {
 	fmt.Fscan(in, &n)
 
 	xs := make([]int, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		fmt.Fscan(in, &xs[i])
 	}
 
 	result := dp(xs)
-	fmt.Fprintln(out, result)
+	fmt.Fprintln(out, len(result))
+
+	for _, v := range result {
+		fmt.Fprintf(out, "%d ", v)
+	}
 }
 
-func dp(xs []int) int {
+func dp(xs []int) []int {
 	dp := make([]int, len(xs)+1)
+	prev := make([]*node, len(xs)+2)
 	size := 1
-	for _, v := range xs {
+	for i, v := range xs {
 		// binsearch [ >= x ][ < x ]
 		left, right := 0, size
 		for right-left > 1 {
@@ -39,10 +49,17 @@ func dp(xs []int) int {
 			}
 		}
 		dp[right] = v
+		prev[right+1] = &node{i, prev[right]}
 		if right == size {
 			size++
 		}
 	}
-	fmt.Printf("%v\n", dp)
-	return size - 1
+
+	result := make([]int, size-1)
+	node := prev[size]
+	for i := len(result) - 1; i >= 0; i-- {
+		result[i] = node.val + 1
+		node = node.next
+	}
+	return result
 }
